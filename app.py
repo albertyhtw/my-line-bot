@@ -54,7 +54,7 @@ def handle_message(event):
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
         return
 
-    # === FEATURE 2: Custom #Tag System (English & Tagalog) ===
+    # === FEATURE 2: Custom #Tag System ===
     if msg.startswith("#"):
         all_data = load_groups()
         
@@ -77,6 +77,56 @@ def handle_message(event):
                     "📁 Available tags in this group:\n"
                     "📁 Mga magagamit na tag sa grupong ito:\n\n" + "\n".join([f"#{g}" for g in groups.keys()])
                 )
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
+            return
+
+        # 指令: #members xx (用純文字查詢特定標籤下的成員名單，不觸發 Tag 洗版)
+        if command_part == "#members":
+            if len(parts) < 2:
+                reply = (
+                    "❌ Please specify a tag. Example: #members NS\n"
+                    "❌ Mangyaring tukuyin ang tag. Halimbawa: #members NS"
+                )
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
+                return
+            group_name = parts[1].strip()
+            
+            if group_name not in groups:
+                reply = (
+                    f"❌ Tag #{group_name} not found.\n"
+                    f"❌ Hindi mahanap ang tag na #{group_name}."
+                )
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
+                return
+                
+            member_ids = groups[group_name]
+            if not member_ids:
+                reply = (
+                    f"👥 No members in #{group_name} yet.\n"
+                    f"👥 Walang miyembro sa #{group_name} sa kasalukuyan."
+                )
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
+                return
+            
+            # 開始轉換 User ID 為真正的名字
+            names = []
+            for m_id in member_ids:
+                try:
+                    # 嘗試抓取群組內成員的 Profile 名字
+                    if getattr(event.source, 'group_id', None):
+                        profile = line_bot_api.get_group_member_profile(group_id, m_id)
+                    else:
+                        profile = line_bot_api.get_profile(m_id)
+                    names.append(profile.display_name)
+                except Exception:
+                    # 如果對方沒加機器人好友或權限不允許，顯示前四碼代替
+                    names.append(f"User_{m_id[:4]}")
+            
+            reply = (
+                f"👥 Members of #{group_name}:\n"
+                f"👥 Mga miyembro ng #{group_name}:\n"
+                f"----------------------\n" + "\n".join([f"• {name}" for name in names])
+            )
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
             return
             
