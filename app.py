@@ -30,7 +30,13 @@ def handle_message(event):
     # 偵測是否包含 @all (不分大小寫)
     if "@all" in msg.lower():
        # 英文與 Tagalog 雙語警告訊息 (非緊急勿用)
-        reply_text = "⚠️ System Notice: Please reserve the @all tag for emergency situations only. Avoid using it for non-urgent matters to prevent disturbing others.\n\n⚠️ Paunawa ng Sistema: Mangyaring gamitin lamang ang @all tag para sa mga emergency na sitwasyon. Iwasan ang paggamit nito sa mga hindi apurahang bagay upang hindi makaabala sa iba."
+        # 英文與 Tagalog 雙語版
+reply_text = (
+    "⚠️ System Notice: Please reserve the @all tag for major announcements and emergencies only. "
+    "If everything is marked as @all, the significance of this alert will be lost.\n\n"
+    "⚠️ Paunawa ng Sistema: Mangyaring gamitin lamang ang @all tag para sa mahahalagang anunsyo at emergency. "
+    "Kapag ang lahat ng mensahe ay naka-@all, mawawalan na ito ng kahalagahan."
+)
         
         line_bot_api.reply_message(
             event.reply_token,
